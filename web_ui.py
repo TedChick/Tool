@@ -30,20 +30,50 @@ HTML_PAGE = """<!DOCTYPE html>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --bg: #070b14;
-      --bg-grad: radial-gradient(circle at 15% 0%, rgba(56, 189, 248, 0.12), transparent 40%),
-                 radial-gradient(circle at 85% 10%, rgba(239, 68, 68, 0.10), transparent 35%);
-      --surface: rgba(17, 24, 39, 0.78);
-      --card: rgba(24, 33, 52, 0.85);
-      --card-hover: rgba(30, 41, 64, 0.95);
-      --border: rgba(148, 163, 184, 0.16);
+      --bg: #050d1a;
+      --bg-grad:
+        radial-gradient(ellipse 80% 50% at 20% -10%, rgba(16, 185, 129, 0.28), transparent 60%),
+        radial-gradient(ellipse 70% 50% at 85% 5%, rgba(56, 189, 248, 0.25), transparent 55%),
+        radial-gradient(ellipse 60% 45% at 50% 100%, rgba(99, 102, 241, 0.22), transparent 60%);
+      --surface: rgba(13, 24, 42, 0.72);
+      --card: rgba(19, 34, 58, 0.78);
+      --card-hover: rgba(26, 46, 78, 0.92);
+      --border: rgba(148, 163, 184, 0.2);
       --text: #f8fafc;
-      --muted: #94a3b8;
+      --muted: #cbd5e1;
       --live: #ef4444;
       --accent: #38bdf8;
-      --accent-2: #6366f1;
-      --ok: #22c55e;
-      --radius: 14px;
+      --accent-2: #10b981;
+      --ok: #34d399;
+      --radius: 16px;
+    }
+    body.theme-neon {
+      --bg: #0b0618;
+      --bg-grad:
+        radial-gradient(ellipse 80% 50% at 15% 0%, rgba(236, 72, 153, 0.28), transparent 60%),
+        radial-gradient(ellipse 70% 50% at 85% 10%, rgba(139, 92, 246, 0.30), transparent 55%),
+        radial-gradient(ellipse 60% 45% at 50% 100%, rgba(56, 189, 248, 0.22), transparent 60%);
+      --surface: rgba(22, 14, 42, 0.75);
+      --card: rgba(31, 20, 58, 0.80);
+      --card-hover: rgba(43, 28, 79, 0.94);
+      --accent: #f472b6;
+      --accent-2: #a855f7;
+    }
+    body.theme-light {
+      --bg: #eef4ff;
+      --bg-grad:
+        radial-gradient(ellipse 80% 50% at 15% 0%, rgba(56, 189, 248, 0.28), transparent 60%),
+        radial-gradient(ellipse 70% 50% at 85% 10%, rgba(16, 185, 129, 0.22), transparent 55%),
+        radial-gradient(ellipse 60% 45% at 50% 100%, rgba(99, 102, 241, 0.16), transparent 60%);
+      --surface: rgba(255, 255, 255, 0.82);
+      --card: rgba(255, 255, 255, 0.94);
+      --card-hover: #ffffff;
+      --border: rgba(15, 23, 42, 0.12);
+      --text: #0f172a;
+      --muted: #475569;
+      --accent: #0284c7;
+      --accent-2: #059669;
+      --ok: #059669;
     }
     * { box-sizing: border-box; }
     body {
@@ -55,6 +85,21 @@ HTML_PAGE = """<!DOCTYPE html>
       color: var(--text);
       line-height: 1.5;
       min-height: 100vh;
+      position: relative;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: -1;
+      opacity: 0.28;
+      background-image:
+        linear-gradient(to right, rgba(255,255,255,0.06) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255,255,255,0.06) 1px, transparent 1px);
+      background-size: 48px 48px;
+      mask-image: radial-gradient(ellipse at center, black 40%, transparent 85%);
     }
     .topbar {
       position: sticky;
@@ -109,6 +154,48 @@ HTML_PAGE = """<!DOCTYPE html>
       transition: all 0.2s ease;
     }
     .nav-pills a:hover { color: var(--text); border-color: var(--accent); }
+    .theme-switch {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+    .theme-btn {
+      padding: 6px 10px;
+      font-size: 0.78rem;
+      border-radius: 999px;
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      box-shadow: none;
+    }
+    .theme-btn:hover { border-color: var(--accent); }
+
+    .hero {
+      background: linear-gradient(125deg, rgba(16, 185, 129, 0.22), rgba(56, 189, 248, 0.22), rgba(99, 102, 241, 0.22));
+      border: 1px solid rgba(56, 189, 248, 0.32);
+      border-radius: 18px;
+      padding: 24px 26px;
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 18px;
+      flex-wrap: wrap;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
+    }
+    .hero h2 { margin: 0 0 6px; font-size: 1.45rem; font-weight: 800; letter-spacing: -0.02em; }
+    .hero p { margin: 0; color: var(--muted); font-size: 0.94rem; max-width: 620px; }
+    .hero-badges { display: flex; gap: 10px; flex-wrap: wrap; }
+    .hero-pill {
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      background: rgba(15, 23, 42, 0.55);
+      color: #f8fafc;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+    }
 
     .container { max-width: 1200px; margin: 0 auto; padding: 24px 20px 60px; }
 
@@ -402,10 +489,26 @@ HTML_PAGE = """<!DOCTYPE html>
         <a href="#scoreboard">⚽ Lịch &amp; Tỷ số</a>
         <a href="#scanner">🔎 Quét Link</a>
       </nav>
+      <div class="theme-switch">
+        <button class="theme-btn" onclick="setTheme('')">🏟️ Sân cỏ</button>
+        <button class="theme-btn" onclick="setTheme('theme-neon')">⚡ Neon</button>
+        <button class="theme-btn" onclick="setTheme('theme-light')">☀️ Sáng</button>
+      </div>
     </div>
   </header>
 
   <main class="container">
+    <section class="hero">
+      <div>
+        <h2>🔥 Trung Tâm Thể Thao Trực Tiếp Toàn Cầu</h2>
+        <p>Theo dõi tỷ số trực tiếp, lịch thi đấu các giải lớn và mở ngay các kênh thể thao đang phát Live miễn phí trên một màn hình.</p>
+      </div>
+      <div class="hero-badges">
+        <span class="hero-pill">🌍 Toàn thế giới</span>
+        <span class="hero-pill">📺 YouTube Live 1 chạm</span>
+        <span class="hero-pill">⚡ Cập nhật Real-time</span>
+      </div>
+    </section>
     <section class="section" id="live-video">
       <div class="section-head">
         <h2>📺 Kênh Thể Thao Đang Live Miễn Phí</h2>
@@ -548,7 +651,16 @@ HTML_PAGE = """<!DOCTYPE html>
 
     function setYtQuery(q) {
       document.getElementById('ytQuery').value = q;
-      loadYouTubeLive();
+      function setTheme(name) {
+      document.body.className = name;
+      try { localStorage.setItem('sports_theme', name); } catch (e) {}
+    }
+    try {
+      const savedTheme = localStorage.getItem('sports_theme');
+      if (savedTheme) document.body.className = savedTheme;
+    } catch (e) {}
+
+    loadYouTubeLive();
     }
 
     function playStream(embedUrl, title) {
@@ -602,6 +714,15 @@ HTML_PAGE = """<!DOCTYPE html>
         stats.innerHTML = `<span class="error">Lỗi kết nối: ${err.message}</span>`;
       }
     }
+
+    function setTheme(name) {
+      document.body.className = name;
+      try { localStorage.setItem('sports_theme', name); } catch (e) {}
+    }
+    try {
+      const savedTheme = localStorage.getItem('sports_theme');
+      if (savedTheme) document.body.className = savedTheme;
+    } catch (e) {}
 
     loadYouTubeLive();
     loadMatches();
