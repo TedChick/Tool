@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: live-sports-links
+    runtime: python
+    plan: free
+    buildCommand: ""
+    startCommand: python main.py --web
