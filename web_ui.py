@@ -24,65 +24,298 @@ HTML_PAGE = """<!DOCTYPE html>
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Live Sports Link Aggregator</title>
+  <title>Live Sports Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --bg: #0f172a;
-      --card: #1e293b;
-      --border: #334155;
+      --bg: #070b14;
+      --bg-grad: radial-gradient(circle at 15% 0%, rgba(56, 189, 248, 0.12), transparent 40%),
+                 radial-gradient(circle at 85% 10%, rgba(239, 68, 68, 0.10), transparent 35%);
+      --surface: rgba(17, 24, 39, 0.78);
+      --card: rgba(24, 33, 52, 0.85);
+      --card-hover: rgba(30, 41, 64, 0.95);
+      --border: rgba(148, 163, 184, 0.16);
       --text: #f8fafc;
       --muted: #94a3b8;
       --live: #ef4444;
       --accent: #38bdf8;
+      --accent-2: #6366f1;
       --ok: #22c55e;
+      --radius: 14px;
     }
     * { box-sizing: border-box; }
     body {
       margin: 0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-      background: var(--bg);
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background-color: var(--bg);
+      background-image: var(--bg-grad);
+      background-attachment: fixed;
       color: var(--text);
-      padding: 24px;
+      line-height: 1.5;
+      min-height: 100vh;
     }
-    .container { max-width: 1100px; margin: 0 auto; }
-    h1 { margin: 0 0 6px; font-size: 1.6rem; }
-    .subtitle { color: var(--muted); margin-bottom: 20px; font-size: 0.95rem; }
-    .controls {
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      background: rgba(7, 11, 20, 0.82);
+      border-bottom: 1px solid var(--border);
+    }
+    .topbar-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 14px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .brand-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      display: grid;
+      place-items: center;
+      font-size: 1.2rem;
+      box-shadow: 0 6px 20px rgba(56, 189, 248, 0.25);
+    }
+    .brand h1 { margin: 0; font-size: 1.15rem; font-weight: 800; letter-spacing: -0.02em; }
+    .brand p { margin: 0; font-size: 0.78rem; color: var(--muted); }
+    .nav-pills {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .nav-pills a {
+      text-decoration: none;
+      color: var(--muted);
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 7px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      transition: all 0.2s ease;
+    }
+    .nav-pills a:hover { color: var(--text); border-color: var(--accent); }
+
+    .container { max-width: 1200px; margin: 0 auto; padding: 24px 20px 60px; }
+
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 24px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
+    }
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+    .section-head h2 {
+      margin: 0;
+      font-size: 1.15rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .stats {
+      color: var(--muted);
+      font-size: 0.85rem;
+      font-weight: 500;
+      background: rgba(15, 23, 42, 0.7);
+      padding: 5px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+    }
+
+    .controls, .custom-row {
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
-      background: var(--card);
-      padding: 14px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      margin-bottom: 18px;
       align-items: center;
+      margin-bottom: 14px;
     }
-    select, input[type="text"], button {
-      background: #0f172a;
+    select, input[type="text"] {
+      background: rgba(10, 15, 28, 0.9);
       color: var(--text);
       border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 8px 12px;
-      font-size: 0.92rem;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s ease;
     }
-    input[type="text"] { flex: 1; min-width: 180px; }
+    select:focus, input[type="text"]:focus { border-color: var(--accent); }
+    input[type="text"] { flex: 1; min-width: 200px; }
+
     button {
-      background: var(--accent);
-      color: #0f172a;
-      font-weight: 600;
+      background: linear-gradient(135deg, var(--accent), #0ea5e9);
+      color: #06121f;
+      font-weight: 700;
+      font-family: inherit;
       border: none;
+      border-radius: 10px;
+      padding: 10px 16px;
+      font-size: 0.9rem;
       cursor: pointer;
+      transition: transform 0.15s ease, opacity 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 4px 14px rgba(56, 189, 248, 0.22);
     }
-    button:hover { opacity: 0.9; }
+    button:hover { opacity: 0.94; transform: translateY(-1px); }
+    button:active { transform: translateY(0); }
+
     label.toggle {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
       cursor: pointer;
-      font-size: 0.92rem;
+      font-size: 0.88rem;
+      font-weight: 600;
+      padding: 9px 14px;
+      border-radius: 10px;
+      background: rgba(10, 15, 28, 0.7);
+      border: 1px solid var(--border);
+      user-select: none;
     }
-    .stats { color: var(--muted); font-size: 0.9rem; margin-bottom: 12px; }
+    label.toggle input { accent-color: var(--live); width: 16px; height: 16px; }
+
+    .yt-presets { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+    .yt-presets button {
+      background: rgba(15, 23, 42, 0.85);
+      color: var(--text);
+      border: 1px solid var(--border);
+      box-shadow: none;
+      font-weight: 600;
+      font-size: 0.83rem;
+      padding: 7px 12px;
+      border-radius: 999px;
+    }
+    .yt-presets button:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(56, 189, 248, 0.08);
+    }
+
+    .player-wrap {
+      display: none;
+      margin-bottom: 18px;
+      background: #000;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      box-shadow: 0 14px 36px rgba(0, 0, 0, 0.55);
+    }
+    .player-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 14px;
+      background: #0f172a;
+      font-size: 0.9rem;
+      font-weight: 600;
+      gap: 10px;
+    }
+    .player-ratio { position: relative; width: 100%; padding-top: 56.25%; }
+    .player-ratio iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+
+    .yt-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(265px, 1fr));
+      gap: 14px;
+    }
+    .yt-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+    }
+    .yt-card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(56, 189, 248, 0.45);
+      background: var(--card-hover);
+    }
+    .thumb-wrap { position: relative; }
+    .thumb-wrap img { width: 100%; height: 152px; object-fit: cover; display: block; }
+    .live-pill {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(239, 68, 68, 0.92);
+      color: #fff;
+      font-size: 0.72rem;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 6px;
+      letter-spacing: 0.04em;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .pulse-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #fff;
+      animation: pulse 1.3s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.75); }
+    }
+    .yt-body { padding: 12px; display: flex; flex-direction: column; gap: 7px; flex: 1; }
+    .yt-title {
+      font-size: 0.92rem;
+      font-weight: 700;
+      line-height: 1.35;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .yt-meta { font-size: 0.8rem; color: var(--muted); }
+    .yt-actions { display: flex; gap: 8px; margin-top: auto; padding-top: 8px; }
+    .yt-actions button { flex: 1; padding: 8px 10px; font-size: 0.83rem; }
+    .yt-actions a {
+      padding: 8px 12px;
+      font-size: 0.83rem;
+      font-weight: 600;
+      color: var(--accent);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+    }
+    .yt-actions a:hover { border-color: var(--accent); background: rgba(56, 189, 248, 0.08); }
+
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -91,171 +324,152 @@ HTML_PAGE = """<!DOCTYPE html>
     .card {
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 14px;
+      border-radius: 12px;
+      padding: 15px;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 9px;
+      transition: transform 0.2s ease, border-color 0.2s ease;
     }
+    .card:hover { transform: translateY(-2px); border-color: rgba(56, 189, 248, 0.4); }
     .card-top {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 0.82rem;
+      gap: 8px;
+      font-size: 0.78rem;
       color: var(--muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
     }
     .badge {
-      padding: 2px 8px;
+      padding: 3px 9px;
       border-radius: 999px;
-      font-weight: 700;
-      font-size: 0.75rem;
-      text-transform: uppercase;
+      font-weight: 800;
+      font-size: 0.72rem;
+      white-space: nowrap;
     }
-    .badge.live { background: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid var(--live); }
-    .badge.upcoming { background: rgba(56, 189, 248, 0.15); color: #7dd3fc; }
-    .badge.finished { background: rgba(148, 163, 184, 0.15); color: #cbd5e1; }
-    .match-title { font-size: 1.05rem; font-weight: 600; }
-    .score { font-size: 1.25rem; font-weight: 700; color: var(--ok); }
-    .broadcasts { font-size: 0.85rem; color: var(--muted); }
-    .links { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+    .badge.live { background: rgba(239, 68, 68, 0.18); color: #fca5a5; border: 1px solid var(--live); }
+    .badge.upcoming { background: rgba(56, 189, 248, 0.14); color: #7dd3fc; border: 1px solid rgba(56, 189, 248, 0.3); }
+    .badge.finished { background: rgba(148, 163, 184, 0.14); color: #cbd5e1; }
+    .match-title { font-size: 1.02rem; font-weight: 700; line-height: 1.35; }
+    .score {
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: var(--ok);
+      letter-spacing: 0.03em;
+    }
+    .meta-line { font-size: 0.83rem; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+    .links { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; padding-top: 4px; }
     .links a {
-      font-size: 0.82rem;
+      font-size: 0.8rem;
+      font-weight: 600;
       color: var(--accent);
       text-decoration: none;
       border: 1px solid var(--border);
-      padding: 4px 8px;
-      border-radius: 6px;
-      background: #0f172a;
-    }
-    .links a:hover { border-color: var(--accent); }
-    .custom-box {
-      margin-top: 26px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 14px;
-    }
-    .custom-box h2 { margin: 0 0 10px; font-size: 1.1rem; }
-    .custom-row { display: flex; gap: 10px; flex-wrap: wrap; }
-    .custom-list { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; font-size: 0.9rem; }
-    .custom-list a { color: var(--accent); word-break: break-all; }
-    .error { color: #fca5a5; }
-    .yt-section {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 16px;
-      margin-bottom: 22px;
-    }
-    .yt-section h2 { margin: 0 0 10px; font-size: 1.15rem; }
-    .yt-presets { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
-    .yt-presets button {
-      background: #0f172a;
-      color: var(--text);
-      border: 1px solid var(--border);
-      font-weight: 500;
-      font-size: 0.85rem;
-      padding: 6px 10px;
-    }
-    .yt-presets button:hover { border-color: var(--accent); color: var(--accent); }
-    .player-wrap {
-      display: none;
-      margin-bottom: 14px;
-      background: #000;
+      padding: 5px 10px;
       border-radius: 8px;
-      overflow: hidden;
-      border: 1px solid var(--border);
+      background: rgba(10, 15, 28, 0.8);
+      transition: all 0.15s ease;
     }
-    .player-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+    .links a:hover { border-color: var(--accent); background: rgba(56, 189, 248, 0.1); }
+
+    .custom-list { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; font-size: 0.88rem; }
+    .custom-list div {
       padding: 8px 12px;
-      background: #0f172a;
-      font-size: 0.9rem;
-    }
-    .player-wrap iframe { width: 100%; height: 420px; border: 0; display: block; }
-    .yt-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-      gap: 12px;
-    }
-    .yt-card {
-      background: #0f172a;
-      border: 1px solid var(--border);
       border-radius: 8px;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-    }
-    .yt-card img { width: 100%; height: 148px; object-fit: cover; display: block; }
-    .yt-body { padding: 10px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
-    .yt-title { font-size: 0.92rem; font-weight: 600; line-height: 1.3; }
-    .yt-meta { font-size: 0.8rem; color: var(--muted); }
-    .yt-actions { display: flex; gap: 6px; margin-top: auto; padding-top: 6px; }
-    .yt-actions button { flex: 1; padding: 6px 8px; font-size: 0.82rem; }
-    .yt-actions a {
-      padding: 6px 10px;
-      font-size: 0.82rem;
-      color: var(--accent);
+      background: rgba(10, 15, 28, 0.7);
       border: 1px solid var(--border);
-      border-radius: 6px;
-      text-decoration: none;
     }
+    .custom-list a { color: var(--accent); word-break: break-all; text-decoration: none; }
+    .custom-list a:hover { text-decoration: underline; }
+    .error { color: #fca5a5; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>🏆 Live Sports Link Aggregator</h1>
-    <div class="subtitle">Tổng hợp các trận thể thao trực tiếp (Bóng đá, NBA, Tennis, NHL, NFL, UFC...) &amp; kênh Live miễn phí công khai</div>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="brand-icon">🏆</div>
+        <div>
+          <h1>Live Sports Hub</h1>
+          <p>Thể thao trực tiếp toàn cầu &amp; kênh phát sóng miễn phí</p>
+        </div>
+      </div>
+      <nav class="nav-pills">
+        <a href="#live-video">📺 Xem Live</a>
+        <a href="#scoreboard">⚽ Lịch &amp; Tỷ số</a>
+        <a href="#scanner">🔎 Quét Link</a>
+      </nav>
+    </div>
+  </header>
 
-    <div class="yt-section">
-      <h2>📺 Kênh Thể Thao Đang Live Miễn Phí (YouTube Công Khai - Xem trực tiếp)</h2>
+  <main class="container">
+    <section class="section" id="live-video">
+      <div class="section-head">
+        <h2>📺 Kênh Thể Thao Đang Live Miễn Phí</h2>
+        <div class="stats" id="ytStats">Đang tìm các kênh đang Live...</div>
+      </div>
+
       <div class="yt-presets">
         <button onclick="setYtQuery('trực tiếp bóng đá')">⚽ Bóng đá Live</button>
         <button onclick="setYtQuery('live sports stream')">🏆 Thể thao Live</button>
-        <button onclick="setYtQuery('bóng chuyền cầu lông trực tiếp')">🏸 Cầu lông / Bóng chuyền</button>
+        <button onclick="setYtQuery('badminton live')">🏸 Cầu lông Live</button>
+        <button onclick="setYtQuery('bóng chuyền trực tiếp')">🏐 Bóng chuyền Live</button>
         <button onclick="setYtQuery('esports live tournament')">🎮 Esports Live</button>
       </div>
-      <div class="custom-row" style="margin-bottom: 12px;">
-        <input type="text" id="ytQuery" value="live sports stream" placeholder="Nhập từ khóa tìm kênh đang Live miễn phí..." />
-        <button onclick="loadYouTubeLive()">Tìm kênh đang Live</button>
+
+      <div class="custom-row">
+        <input type="text" id="ytQuery" value="live sports stream" placeholder="Nhập từ khóa tìm kênh đang Live miễn phí (tiếng Việt hoặc tiếng Anh)..." />
+        <button onclick="loadYouTubeLive()">Tìm kênh Live</button>
       </div>
+
       <div class="player-wrap" id="playerWrap">
         <div class="player-bar">
           <span id="playerTitle">Đang phát...</span>
-          <button onclick="closePlayer()" style="padding:4px 10px;font-size:0.8rem;">Đóng</button>
+          <button onclick="closePlayer()" style="padding:6px 12px;font-size:0.8rem;">✕ Đóng trình phát</button>
         </div>
-        <iframe id="ytPlayer" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+        <div class="player-ratio">
+          <iframe id="ytPlayer" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+        </div>
       </div>
-      <div class="stats" id="ytStats">Đang tìm các kênh đang Live...</div>
+
       <div class="yt-grid" id="ytGrid"></div>
-    </div>
+    </section>
 
-    <div class="controls">
-      <select id="league">
-        __LEAGUE_OPTIONS__
-      </select>
-      <input type="text" id="search" placeholder="Tìm đội bóng, giải đấu, kênh phát sóng..." />
-      <label class="toggle">
-        <input type="checkbox" id="liveOnly" />
-        Chỉ trận đang đá (LIVE)
-      </label>
-      <button onclick="loadMatches()">Làm mới</button>
-    </div>
+    <section class="section" id="scoreboard">
+      <div class="section-head">
+        <h2>⚽ Lịch Thi Đấu &amp; Tỷ Số Toàn Cầu</h2>
+        <div class="stats" id="stats">Đang tải...</div>
+      </div>
 
-    <div class="stats" id="stats">Đang tải...</div>
-    <div class="grid" id="grid"></div>
+      <div class="controls">
+        <select id="league">
+          __LEAGUE_OPTIONS__
+        </select>
+        <input type="text" id="search" placeholder="Tìm đội bóng, giải đấu, kênh phát sóng..." />
+        <label class="toggle">
+          <input type="checkbox" id="liveOnly" />
+          Chỉ trận đang đá (LIVE)
+        </label>
+        <button onclick="loadMatches()">Làm mới</button>
+      </div>
 
-    <div class="custom-box">
-      <h2>Quét link công khai từ trang lịch thi đấu tùy chọn</h2>
-      <div class="custom-row">
-        <input type="text" id="customUrl" placeholder="Nhập URL trang lịch thi đấu công khai (https://...)" />
+      <div class="grid" id="grid"></div>
+    </section>
+
+    <section class="section" id="scanner">
+      <div class="section-head">
+        <h2>🔎 Quét Link Công Khai Từ Trang Lịch Thi Đấu</h2>
+      </div>
+      <div class="custom-row" style="margin-bottom:0;">
+        <input type="text" id="customUrl" placeholder="Nhập URL trang lịch thi đấu công khai (vd: https://bongdaplus.vn)" />
         <button onclick="scanCustomUrl()">Quét link</button>
       </div>
       <div class="custom-list" id="customList"></div>
-    </div>
-  </div>
+    </section>
+  </main>
 
   <script>
     async function loadMatches() {
@@ -275,7 +489,7 @@ HTML_PAGE = """<!DOCTYPE html>
           return;
         }
         const liveCount = data.matches.filter(m => m.status === 'live').length;
-        stats.textContent = `Tìm thấy ${data.matches.length} trận (${liveCount} trận đang LIVE)`;
+        stats.textContent = `${data.matches.length} trận (${liveCount} đang LIVE)`;
         if (!data.matches.length) {
           grid.innerHTML = '<div style="color:#94a3b8">Không có trận nào khớp bộ lọc.</div>';
           return;
@@ -290,8 +504,8 @@ HTML_PAGE = """<!DOCTYPE html>
             </div>
             <div class="match-title">${m.name}</div>
             <div class="score">${m.score}</div>
-            <div class="broadcasts">🕒 ${timeText || 'Chưa rõ giờ'}</div>
-            <div class="broadcasts">📺 Kênh: ${m.broadcasts.length ? m.broadcasts.join(', ') : 'Chưa có thông tin kênh'}</div>
+            <div class="meta-line">🕒 ${timeText || 'Chưa rõ giờ'}</div>
+            <div class="meta-line">📺 Kênh: ${m.broadcasts.length ? m.broadcasts.join(', ') : 'Chưa có thông tin kênh'}</div>
             <div class="links">
               ${m.links.map(l => `<a href="${l.url}" target="_blank" rel="noopener noreferrer">🔗 ${l.label}</a>`).join('')}
             </div>
@@ -320,7 +534,7 @@ HTML_PAGE = """<!DOCTYPE html>
           return;
         }
         box.innerHTML = data.links.map(l =>
-          `<div>• <a href="${l.url}" target="_blank" rel="noopener noreferrer">${l.label}</a></div>`
+          `<div>🔗 <a href="${l.url}" target="_blank" rel="noopener noreferrer">${l.label}</a></div>`
         ).join('');
       } catch (err) {
         box.innerHTML = `<span class="error">Lỗi: ${err.message}</span>`;
@@ -363,20 +577,23 @@ HTML_PAGE = """<!DOCTYPE html>
           grid.innerHTML = '';
           return;
         }
-        stats.textContent = `Tìm thấy ${data.streams.length} luồng đang phát Live miễn phí`;
+        stats.textContent = `${data.streams.length} luồng đang phát Live`;
         if (!data.streams.length) {
           grid.innerHTML = '<div style="color:#94a3b8">Không tìm thấy luồng Live nào với từ khóa này.</div>';
           return;
         }
         grid.innerHTML = data.streams.map(s => `
           <div class="yt-card">
-            <img src="${s.thumbnail}" alt="" loading="lazy" />
+            <div class="thumb-wrap">
+              <img src="${s.thumbnail}" alt="" loading="lazy" />
+              <div class="live-pill"><span class="pulse-dot"></span> LIVE</div>
+            </div>
             <div class="yt-body">
               <div class="yt-title">${s.title}</div>
-              <div class="yt-meta">📺 ${s.channel} · 🔴 ${s.viewers}</div>
+              <div class="yt-meta">📺 ${s.channel} · ${s.viewers}</div>
               <div class="yt-actions">
                 <button onclick='playStream(${JSON.stringify(s.embed_url)}, ${JSON.stringify(s.title)})'>▶ Xem ngay</button>
-                <a href="${s.watch_url}" target="_blank" rel="noopener noreferrer">Mở YouTube</a>
+                <a href="${s.watch_url}" target="_blank" rel="noopener noreferrer">YouTube</a>
               </div>
             </div>
           </div>
