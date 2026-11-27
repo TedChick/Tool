@@ -14,6 +14,7 @@ from scraper import (
     fetch_all_sports_matches,
     fetch_espn_scoreboard,
     fetch_public_page_links,
+    fetch_youtube_live_streams,
     filter_matches,
     parse_espn_events,
 )
@@ -139,12 +140,97 @@ HTML_PAGE = """<!DOCTYPE html>
     .custom-list { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; font-size: 0.9rem; }
     .custom-list a { color: var(--accent); word-break: break-all; }
     .error { color: #fca5a5; }
+    .yt-section {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 22px;
+    }
+    .yt-section h2 { margin: 0 0 10px; font-size: 1.15rem; }
+    .yt-presets { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+    .yt-presets button {
+      background: #0f172a;
+      color: var(--text);
+      border: 1px solid var(--border);
+      font-weight: 500;
+      font-size: 0.85rem;
+      padding: 6px 10px;
+    }
+    .yt-presets button:hover { border-color: var(--accent); color: var(--accent); }
+    .player-wrap {
+      display: none;
+      margin-bottom: 14px;
+      background: #000;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .player-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      background: #0f172a;
+      font-size: 0.9rem;
+    }
+    .player-wrap iframe { width: 100%; height: 420px; border: 0; display: block; }
+    .yt-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 12px;
+    }
+    .yt-card {
+      background: #0f172a;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .yt-card img { width: 100%; height: 148px; object-fit: cover; display: block; }
+    .yt-body { padding: 10px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+    .yt-title { font-size: 0.92rem; font-weight: 600; line-height: 1.3; }
+    .yt-meta { font-size: 0.8rem; color: var(--muted); }
+    .yt-actions { display: flex; gap: 6px; margin-top: auto; padding-top: 6px; }
+    .yt-actions button { flex: 1; padding: 6px 8px; font-size: 0.82rem; }
+    .yt-actions a {
+      padding: 6px 10px;
+      font-size: 0.82rem;
+      color: var(--accent);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      text-decoration: none;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>🏆 Live Sports Link Aggregator</h1>
-    <div class="subtitle">Tổng hợp các trận thể thao trực tiếp (Bóng đá, NBA, Tennis, NHL, NFL, UFC...) &amp; đường link công khai</div>
+    <div class="subtitle">Tổng hợp các trận thể thao trực tiếp (Bóng đá, NBA, Tennis, NHL, NFL, UFC...) &amp; kênh Live miễn phí công khai</div>
+
+    <div class="yt-section">
+      <h2>📺 Kênh Thể Thao Đang Live Miễn Phí (YouTube Công Khai - Xem trực tiếp)</h2>
+      <div class="yt-presets">
+        <button onclick="setYtQuery('trực tiếp bóng đá')">⚽ Bóng đá Live</button>
+        <button onclick="setYtQuery('live sports stream')">🏆 Thể thao Live</button>
+        <button onclick="setYtQuery('bóng chuyền cầu lông trực tiếp')">🏸 Cầu lông / Bóng chuyền</button>
+        <button onclick="setYtQuery('esports live tournament')">🎮 Esports Live</button>
+      </div>
+      <div class="custom-row" style="margin-bottom: 12px;">
+        <input type="text" id="ytQuery" value="live sports stream" placeholder="Nhập từ khóa tìm kênh đang Live miễn phí..." />
+        <button onclick="loadYouTubeLive()">Tìm kênh đang Live</button>
+      </div>
+      <div class="player-wrap" id="playerWrap">
+        <div class="player-bar">
+          <span id="playerTitle">Đang phát...</span>
+          <button onclick="closePlayer()" style="padding:4px 10px;font-size:0.8rem;">Đóng</button>
+        </div>
+        <iframe id="ytPlayer" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+      </div>
+      <div class="stats" id="ytStats">Đang tìm các kênh đang Live...</div>
+      <div class="yt-grid" id="ytGrid"></div>
+    </div>
 
     <div class="controls">
       <select id="league">
@@ -244,6 +330,63 @@ HTML_PAGE = """<!DOCTYPE html>
     document.getElementById('league').addEventListener('change', loadMatches);
     document.getElementById('liveOnly').addEventListener('change', loadMatches);
     document.getElementById('search').addEventListener('keydown', e => { if (e.key === 'Enter') loadMatches(); });
+    document.getElementById('ytQuery').addEventListener('keydown', e => { if (e.key === 'Enter') loadYouTubeLive(); });
+
+    function setYtQuery(q) {
+      document.getElementById('ytQuery').value = q;
+      loadYouTubeLive();
+    }
+
+    function playStream(embedUrl, title) {
+      const wrap = document.getElementById('playerWrap');
+      document.getElementById('playerTitle').textContent = title;
+      document.getElementById('ytPlayer').src = embedUrl;
+      wrap.style.display = 'block';
+      wrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function closePlayer() {
+      document.getElementById('ytPlayer').src = '';
+      document.getElementById('playerWrap').style.display = 'none';
+    }
+
+    async function loadYouTubeLive() {
+      const q = document.getElementById('ytQuery').value.trim() || 'live sports stream';
+      const stats = document.getElementById('ytStats');
+      const grid = document.getElementById('ytGrid');
+      stats.textContent = 'Đang tìm kênh YouTube đang Live...';
+      try {
+        const res = await fetch('/api/youtube-live?q=' + encodeURIComponent(q));
+        const data = await res.json();
+        if (data.error) {
+          stats.innerHTML = `<span class="error">Lỗi: ${data.error}</span>`;
+          grid.innerHTML = '';
+          return;
+        }
+        stats.textContent = `Tìm thấy ${data.streams.length} luồng đang phát Live miễn phí`;
+        if (!data.streams.length) {
+          grid.innerHTML = '<div style="color:#94a3b8">Không tìm thấy luồng Live nào với từ khóa này.</div>';
+          return;
+        }
+        grid.innerHTML = data.streams.map(s => `
+          <div class="yt-card">
+            <img src="${s.thumbnail}" alt="" loading="lazy" />
+            <div class="yt-body">
+              <div class="yt-title">${s.title}</div>
+              <div class="yt-meta">📺 ${s.channel} · 🔴 ${s.viewers}</div>
+              <div class="yt-actions">
+                <button onclick='playStream(${JSON.stringify(s.embed_url)}, ${JSON.stringify(s.title)})'>▶ Xem ngay</button>
+                <a href="${s.watch_url}" target="_blank" rel="noopener noreferrer">Mở YouTube</a>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        stats.innerHTML = `<span class="error">Lỗi kết nối: ${err.message}</span>`;
+      }
+    }
+
+    loadYouTubeLive();
     loadMatches();
   </script>
 </body>
@@ -296,6 +439,15 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 self._send_json({"matches": [m.to_dict() for m in filtered]})
             except Exception as exc:  # noqa: BLE001
                 self._send_json({"error": str(exc), "matches": []}, status=HTTPStatus.BAD_GATEWAY)
+            return
+
+        if parsed.path == "/api/youtube-live":
+            query = params.get("q", ["live sports stream"])[0]
+            try:
+                streams = fetch_youtube_live_streams(query=query)
+                self._send_json({"streams": streams})
+            except Exception as exc:  # noqa: BLE001
+                self._send_json({"error": str(exc), "streams": []}, status=HTTPStatus.BAD_GATEWAY)
             return
 
         if parsed.path == "/api/scan":

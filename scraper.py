@@ -6,6 +6,7 @@ import concurrent.futures
 import csv
 import html.parser
 import json
+import re
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -263,6 +264,79 @@ def fetch_public_page_links(
             results.append({"label": text or full_url, "url": full_url})
 
     return results
+
+
+def _iter_video_renderers(node: Any):
+    """Recursively yield YouTube videoRenderer dicts from ytInitialData."""
+    if isinstance(node, dict):
+        if "videoRenderer" in node and isinstance(node["videoRenderer"], dict):
+            yield node["videoRenderer"]
+        for value in node.values():
+            yield from _iter_video_renderers(value)
+    elif isinstance(node, list):
+        for item in node:
+            yield from _iter_video_renderers(item)
+
+
+def parse_youtube_live_html(html_text: str, limit: int = 12) -> list[dict[str, str]]:
+    """Parse live stream entries from YouTube search results HTML."""
+    match = re.search(r"var ytInitialData\s*=\s*(\{.*?\});\s*</script>", html_text)
+    if not match:
+        return []
+
+    try:
+        data = json.loads(match.group(1))
+    except json.JSONDecodeError:
+        return []
+
+    streams: list[dict[str, str]] = []
+    seen_ids: set[str] = set()
+
+    for vr in _iter_video_renderers(data):
+        video_id = (vr.get("videoId") or "").strip()
+        if not video_id or video_id in seen_ids:
+            continue
+
+        title_runs = (vr.get("title") or {}).get("runs") or []
+        title = "".join(r.get("text", "") for r in title_runs).strip()
+        if not title:
+            continue
+
+        owner_runs = (vr.get("ownerText") or {}).get("runs") or []
+        channel = "".join(r.get("text", "") for r in owner_runs).strip()
+
+        view_runs = (vr.get("viewCountText") or {}).get("runs") or []
+        view_text = "".join(r.get("text", "") for r in view_runs).strip()
+        if not view_text:
+            view_text = (vr.get("viewCountText") or {}).get("simpleText", "")
+
+        seen_ids.add(video_id)
+        streams.append(
+            {
+                "video_id": video_id,
+                "title": title,
+                "channel": channel or "YouTube Live",
+                "viewers": view_text or "LIVE",
+                "thumbnail": f"https://i.ytimg.com/vi/{video_id}/hqdefault.jpg",
+                "watch_url": f"https://www.youtube.com/watch?v={video_id}",
+                "embed_url": f"https://www.youtube.com/embed/{video_id}?autoplay=1",
+            }
+        )
+        if len(streams) >= limit:
+            break
+
+    return streams
+
+
+def fetch_youtube_live_streams(
+    query: str = "trực tiếp thể thao", limit: int = 12, timeout: int = 15
+) -> list[dict[str, str]]:
+    """Fetch currently live public YouTube streams for a given query."""
+    encoded_q = urllib.parse.quote_plus(query.strip() or "sports live")
+    # sp=EgJAAQ%253D%253D applies YouTube's built-in "Live" filter
+    url = f"https://www.youtube.com/results?search_query={encoded_q}&sp=EgJAAQ%253D%253D"
+    html_text = _http_get_text(url, timeout=timeout)
+    return parse_youtube_live_html(html_text, limit=limit)
 
 
 def filter_matches(

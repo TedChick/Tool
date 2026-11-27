@@ -8,7 +8,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from scraper import export_csv, export_json, filter_matches, parse_espn_events
+from scraper import export_csv, export_json, filter_matches, parse_espn_events, parse_youtube_live_html
 
 SAMPLE_ESPN_PAYLOAD = {
     "leagues": [{"name": "English Premier League"}],
@@ -115,6 +115,19 @@ class ScraperTests(unittest.TestCase):
                 rows = list(csv.DictReader(f))
             self.assertEqual(len(rows), 2)
             self.assertIn("K+ SPORT1", rows[0]["broadcasts"])
+
+    def test_parse_youtube_live_html(self) -> None:
+        sample_html = (
+            '<html><script>var ytInitialData = {"contents": [{"videoRenderer": '
+            '{"videoId": "abc123xyz", "title": {"runs": [{"text": "Live Match Stream"}]}, '
+            '"ownerText": {"runs": [{"text": "Official Sports"}]}, '
+            '"viewCountText": {"runs": [{"text": "1,200 watching"}]}}}]};</script></html>'
+        )
+        streams = parse_youtube_live_html(sample_html)
+        self.assertEqual(len(streams), 1)
+        self.assertEqual(streams[0]["video_id"], "abc123xyz")
+        self.assertEqual(streams[0]["channel"], "Official Sports")
+        self.assertIn("youtube.com/embed/abc123xyz", streams[0]["embed_url"])
 
 
 if __name__ == "__main__":
